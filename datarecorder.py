@@ -1,16 +1,16 @@
 # coding=utf-8
 
-import bftraderclient as bf
+from bftraderclient import BfTraderClient,BfRun
 from bfgateway_pb2 import *
 from bfdatafeed_pb2 import *
 
-class Demo(bf.BfTraderClient):
+class DataRecorder(BfTraderClient):
     def __init__(self):
-        bf.BfTraderClient.__init__(self)
-        self.clientId = "demo";
+        BfTraderClient.__init__(self)
+        self.clientId = "DataRecorder";
         self.tickHandler = True
-        self.tradeHandler = True
-        self.logHandler = True
+        self.tradeHandler = False
+        self.logHandler = False
         self.symbol = "*"
         self.exchange = "*"
         
@@ -24,6 +24,14 @@ class Demo(bf.BfTraderClient):
     def OnGotContracts(self, response):
         print "OnGotContracts"
         print response
+        
+        #
+        # save contract
+        #
+        req = BfGetContractReq(symbol="*",exchange="*")
+        resps = self.GwGetContract(req)
+        for resp in resps:
+            self.InsertContract(resp)
             
     def OnPing(self, response):
         print "OnPing"
@@ -32,6 +40,11 @@ class Demo(bf.BfTraderClient):
     def OnTick(self, response):
         print "OnTick"
         print response
+        
+        #
+        # save tick
+        #
+        resp = self.InsertTick(response)
         
     def OnError(self, response):
         print "OnError"
@@ -61,5 +74,5 @@ class Demo(bf.BfTraderClient):
         print "OnStop"
 
 if __name__ == '__main__':
-    client = Demo()
-    bf.BfRun(client,clientId=client.clientId,tickHandler=client.tickHandler,tradeHandler=client.tradeHandler,logHandler=client.logHandler,symbol=client.symbol,exchange=client.exchange)
+    client = DataRecorder()
+    BfRun(client,clientId=client.clientId,tickHandler=client.tickHandler,tradeHandler=client.tradeHandler,logHandler=client.logHandler,symbol=client.symbol,exchange=client.exchange)
