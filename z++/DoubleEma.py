@@ -93,13 +93,11 @@ class DualCross(object):
         print request
 
         # GetContract
-        for i in range(1, 1000):
-            req = BfGetContractReq(index=i, subscribled=True)
-            resp = self.gateway.GetContract(req, _TIMEOUT_SECONDS, metadata=_MT)
-            if (resp.symbol):
-                print resp
-            else:
-                break
+        req = BfGetContractReq(symbol="*",exchange="*")
+        resps = self.gateway.GetContract(req,_TIMEOUT_SECONDS,metadata=_MT)
+        for resp in resps:
+            print resp
+            df = self.datafeed.InsertContract(resp,_TIMEOUT_SECONDS,metadata=_MT)
 
         # QueryPosition
         req = BfVoid()
@@ -316,9 +314,9 @@ def dispatchPush(client, resp):
 
 def connect(client):
     print "connect gateway"
-    req = BfConnectReq(clientId=_CLIENT_ID, tickHandler=True, tradeHandler=True, logHandler=True, symbol=SYMBOL,
+    req = BfConnectPushReq(clientId=_CLIENT_ID, tickHandler=True, tradeHandler=True, logHandler=True, symbol=SYMBOL,
                        exchange=EXCHANGE)
-    responses = client.gateway.Connect(req, timeout=_ONE_DAY_IN_SECONDS)
+    responses = client.gateway.ConnectPush(req, timeout=_ONE_DAY_IN_SECONDS)
     for resp in responses:
         dispatchPush(client, resp)
     print "connect quit"
@@ -327,7 +325,7 @@ def connect(client):
 def disconnect(client):
     print "disconnect gateway"
     req = BfVoid()
-    resp = client.gateway.Disconnect(req, _TIMEOUT_SECONDS, metadata=_MT)
+    resp = client.gateway.DisconnectPush(req, _TIMEOUT_SECONDS, metadata=_MT)
 
 
 def tryconnect(client):

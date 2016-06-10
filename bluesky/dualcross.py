@@ -328,9 +328,9 @@ def dispatchPush(client,resp):
     
 def connect(client):
     print "connect gateway"
-    req = BfConnectReq(clientId=_CLIENT_ID,tickHandler=True,tradeHandler=True,logHandler=True,
+    req = BfConnectPushReq(clientId=_CLIENT_ID,tickHandler=True,tradeHandler=True,logHandler=True,
                        symbol=_symbol,exchange=_exchange)
-    responses = client.gateway.Connect(req,timeout=_ONE_DAY_IN_SECONDS)
+    responses = client.gateway.ConnectPush(req,timeout=_ONE_DAY_IN_SECONDS)
     for resp in responses:
         dispatchPush(client,resp)            
     print "connect quit"
@@ -338,7 +338,7 @@ def connect(client):
 def disconnect(client):
     print "disconnect gateway"
     req = BfVoid()
-    resp = client.gateway.Disconnect(req,_TIMEOUT_SECONDS,metadata=_MT)
+    resp = client.gateway.DisconnectPush(req,_TIMEOUT_SECONDS,metadata=_MT)
     
 def tryconnect(client):
     '''subscribe dont tryconnect after server shutdown. so unsubscrible and subscrible again'''

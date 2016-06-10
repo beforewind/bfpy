@@ -31,6 +31,7 @@ class DataRecorder(BfTraderClient):
         req = BfGetContractReq(symbol="*",exchange="*")
         resps = self.GwGetContract(req)
         for resp in resps:
+            print resp
             self.InsertContract(resp)
             
     def OnPing(self, response):
