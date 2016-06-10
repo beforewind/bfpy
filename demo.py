@@ -7,7 +7,7 @@ from bfdatafeed_pb2 import *
 class Demo(bf.BfTraderClient):
     def __init__(self):
         bf.BfTraderClient.__init__(self)
-        self.clientid = "demo";
+        self.clientId = "demo";
         self.tickHandler = True
         self.tradeHandler = True
         self.logHandler = True
@@ -62,4 +62,4 @@ class Demo(bf.BfTraderClient):
 
 if __name__ == '__main__':
     client = Demo()
-    bf.BfRun(client,clientId=client.clientid,tickHandler=client.tickHandler,tradeHandler=client.tradeHandler,logHandler=client.logHandler,symbol=client.symbol,exchange=client.exchange)
+    bf.BfRun(client,clientId=client.clientId,tickHandler=client.tickHandler,tradeHandler=client.tradeHandler,logHandler=client.logHandler,symbol=client.symbol,exchange=client.exchange)
