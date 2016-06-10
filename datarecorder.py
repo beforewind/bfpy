@@ -7,7 +7,7 @@ from bfdatafeed_pb2 import *
 class DataRecorder(BfTraderClient):
     def __init__(self):
         BfTraderClient.__init__(self)
-        self.clientId = "DataRecorder";
+        self.clientId = "DataRecorder"
         self.tickHandler = True
         self.tradeHandler = False
         self.logHandler = False
