@@ -107,7 +107,7 @@ class BfTraderClient(object):
         return response
     
     def GwGetContract(self,request):
-        responses = self.gateway.GetContract(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        responses = self.gateway.GetContract(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return responses
 
     def GwPing(self,request):
@@ -131,15 +131,15 @@ class BfTraderClient(object):
         return response        
 
     def DfGetContract(self,request):
-        responses = self.datafeed.GetContract(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        responses = self.datafeed.GetContract(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return responses 
     
     def GetTick(self,request):
-        response = self.datafeed.GetTick(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        response = self.datafeed.GetTick(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return response
     
     def GetBar(self,request):
-        response = self.datafeed.GetBar(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        response = self.datafeed.GetBar(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return response 
 
     def DfPing(self,request):
