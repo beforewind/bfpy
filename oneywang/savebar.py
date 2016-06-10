@@ -181,13 +181,11 @@ class DataRecorder(object):
         print request
 
         # GetContract
-        for i in range(1,1000):
-            req = BfGetContractReq(index=i,subscribled=True)
-            resp = self.gateway.GetContract(req,_TIMEOUT_SECONDS,metadata=_MT)
-            if (resp.symbol):
-                print resp
-            else:
-                break
+        req = BfGetContractReq(symbol="*",exchange="*")
+        resps = self.gateway.GetContract(req,_TIMEOUT_SECONDS,metadata=_MT)
+        for resp in resps:
+            print resp
+            df = self.datafeed.InsertContract(resp,_TIMEOUT_SECONDS,metadata=_MT)
         
         # QueryPosition
         req = BfVoid()
