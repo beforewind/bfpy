@@ -52,50 +52,40 @@ class BfTraderClient(object):
     # callback
     #
     def OnStart(self):
-        print "OnStart"
+        pass
         
     def OnTradeWillBegin(self, response):
-        print "OnTradeWillBegin"
-        print response        
+        pass        
 
     def OnGotContracts(self, response):
-        print "OnGotContracts"
-        print response
+        pass        
             
     def OnPing(self, response):
-        print "OnPing"
-        print response
+        pass        
 
     def OnTick(self, response):
-        print "OnTick"
-        print response
+        pass        
         
     def OnError(self, response):
-        print "OnError"
-        print response
+        pass        
             
     def OnLog(self, response):
-        print "OnLog"
-        print response
+        pass        
     
     def OnTrade(self, response):
-        print "OnTrade"
-        print response
+        pass        
     
     def OnOrder(self, response):
-        print "OnOrder"
-        print response
+        pass        
             
     def OnPosition(self, response):
-        print "OnPosition"
-        print response
+        pass        
 
     def OnAccount(self, response):
-        print "OnAccount"
-        print response
+        pass        
         
     def OnStop(self):
-        print "OnStop"
+        pass        
         
     #
     #  gateway api
