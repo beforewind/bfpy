@@ -6,8 +6,6 @@ import random
 from bfgateway_pb2 import *
 from google.protobuf.any_pb2 import *
 
-from grpc.beta import implementations
-
 _BF_VOID = BfVoid()
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
@@ -15,8 +13,8 @@ class Gateway(BetaBfGatewayServiceServicer):
     def __init__(self):
         print "init gateway"
         
-    def Connect(self, request, context):
-        print "Connect"
+    def ConnectPush(self, request, context):
+        print "ConnectPush"
         print request
         
         resp_data = BfPingData(message="ping")
@@ -42,7 +40,8 @@ class Gateway(BetaBfGatewayServiceServicer):
         print request
         
         resp = BfContractData()
-        return resp
+        for i in range(1,10):
+            yield resp
 
     def SendOrder(self, request, context):
         print "SendOrder"
@@ -69,7 +68,7 @@ class Gateway(BetaBfGatewayServiceServicer):
         
         return _BF_VOID
 
-    def Disconnect(self, request, context):
+    def DisconnectPush(self, request, context):
         print "Disconnect"
         mt =  context.invocation_metadata()
         for it in mt:

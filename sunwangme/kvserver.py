@@ -7,8 +7,6 @@ from bfgateway_pb2 import *
 from bfkv_pb2 import *
 from google.protobuf.any_pb2 import *
 
-from grpc.beta import implementations
-
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 _PING_TYPE = BfPingData().DESCRIPTOR
 
