@@ -27,7 +27,7 @@ QQ交流群340195342，点击加入：http://jq.qq.com/?_wv=1027&k=2ADNTk3
     
 网友策略列表
 ======
-darecorder.py：tick收集器，演示BfTraderClient+BfRun的用法
+datarecorder.py：tick收集器，演示BfTraderClient+BfRun的用法
 z++/: 1分钟方向策略
 xiaoge/: 1分钟动力策略
 xiaoge/multi-period: 多周期多品种的数据收集器
