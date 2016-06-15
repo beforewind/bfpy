@@ -142,6 +142,18 @@ class BfTraderClient(object):
         response = self.datafeed.GetBar(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return response 
 
+    def DeleteContract(self,request):
+        response = self.datafeed.DeleteContract(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        return response 
+    
+    def DeleteTick(self,request):
+        response = self.datafeed.DeleteTick(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        return response
+    
+    def DeleteBar(self,request):
+        response = self.datafeed.DeleteBar(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        return response 
+    
     def DfPing(self,request):
         response = self.datafeed.Ping(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
