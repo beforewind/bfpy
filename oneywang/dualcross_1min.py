@@ -3,7 +3,7 @@
 #################Readme#########################
 #1.请手工保证帐号上的钱够！
 #2.本策略还不支持多实例等复杂场景。
-#3.策略退出是会清除所有挂单。
+#3.策略退出时会清除所有挂单。
 
 
 
@@ -87,7 +87,7 @@ class DualCross(BfTraderClient):
         if position.direction == DIRECTION_LONG:
             self.pos_long += position.position
         elif position.direction == DIRECTION_SHORT:
-            self.pos_short -= position.position
+            self.pos_short += position.position
     
     def OnStart(self):
         print "OnInit-->QueryPosition"
@@ -174,7 +174,7 @@ class DualCross(BfTraderClient):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("buy: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_LONG,offset=OFFSET_OPEN)
-        resp = self.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -182,7 +182,7 @@ class DualCross(BfTraderClient):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("sell: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_LONG,offset=OFFSET_CLOSE)
-        resp = self.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -190,7 +190,7 @@ class DualCross(BfTraderClient):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("short: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_SHORT,offset=OFFSET_OPEN)
-        resp = self.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -198,7 +198,7 @@ class DualCross(BfTraderClient):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("cover: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_SHORT,offset=OFFSET_CLOSE)
-        resp = self.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -244,7 +244,7 @@ class DualCross(BfTraderClient):
             return;
         
         self.pending_orders.remove(request.bfOrderId)
-        _updatePosition(pos)
+        _updatePosition(request.direction, request.offset, request.volume)
         
     def OnStop(self):
         # 退出前，把挂单都撤了
