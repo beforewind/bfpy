@@ -35,6 +35,7 @@ oneywang/：1分钟方向策略
 bluesky/：1分钟方向策略
 bingdian/：1分钟方向策略
 sunwangme/: grpc例子
+tao/: 1分钟方向策略
 
 
 （完）
