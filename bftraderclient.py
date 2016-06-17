@@ -54,12 +54,9 @@ class BfTraderClient(object):
     def OnStart(self):
         pass
         
-    def OnTradeWillBegin(self, response):
+    def OnNotification(self, response):
         pass        
 
-    def OnGotContracts(self, response):
-        pass        
-            
     def OnPing(self, response):
         pass        
 
@@ -114,6 +111,10 @@ class BfTraderClient(object):
         response = self.gateway.Ping(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
     
+    def QueryOrders(self):
+        response = self.gateway.QueryOrders(BfVoid(),timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        return response
+
     #
     # datafeed api
     #
@@ -194,12 +195,7 @@ def _dispatchPush(client,resp):
     elif resp.Is(_NOTIFICATION_TYPE):
         resp_data = BfNotificationData()
         resp.Unpack(resp_data)
-        if resp_data.type == NOTIFICATION_GOTCONTRACTS:
-            client.OnGotContracts(resp_data)
-        elif resp_data.type == NOTIFICATION_TRADEWILLBEGIN:
-            client.OnTradeWillBegin(resp_data)
-        else:
-            print "invliad notification type"
+        client.OnNotification(resp_data)
     else:
         print "invalid push type"        
     
