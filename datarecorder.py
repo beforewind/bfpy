@@ -44,23 +44,7 @@ class DataRecorder(BfTraderClient):
             pass
         else:
             print "invalid notification type"
-        
-    def OnBeginQueryPosition(self,response):
-        print "OnBeginQueryPosition"
-        print response
             
-    def OnEndQueryPosition(self,response):
-        print "OnEndQueryPosition"
-        print response    
-    
-    def OnBeginQueryOrders(self,response):
-        print "OnBeginQueryOrders"
-        print response    
-    
-    def OnEndQueryOrders(self,response):
-        print "OnEndQueryOrders"
-        print response        
-    
     def OnPing(self, response):
         print "OnPing"
         print response
