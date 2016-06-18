@@ -1,4 +1,5 @@
 ﻿# -*- utf-8 -*-
+#creat by Bingdian(QQ:251859269)
 import ctypes
 
 STD_INPUT_HANDLE = -10
