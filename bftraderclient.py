@@ -158,7 +158,11 @@ class BfTraderClient(object):
     def DfPing(self,request):
         response = self.datafeed.Ping(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
-    
+ 
+    def CleanAll(self):
+        response = self.datafeed.Ping(BfVoid(),timeout=_TIMEOUT_SECONDS,metadata=_MT)
+        return response
+  
 def _dispatchPush(client,resp):
     if resp.Is(_TICK_TYPE):
         resp_data = BfTickData()
