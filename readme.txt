@@ -36,6 +36,7 @@ bluesky/：1分钟方向策略
 bingdian/：1分钟方向策略
 sunwangme/: grpc例子
 tao/: 1分钟方向策略
+twelvedays/simplepower/:简单震荡策略
 
 
 （完）
