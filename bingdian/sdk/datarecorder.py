@@ -17,41 +17,30 @@ class DataRecorder(BfTraderClient):
     def OnStart(self):
         print "OnStart"
         
-    def OnNotification(self, response):
-        print "OnNotification"
+    def OnTradeWillBegin(self, response):
+        print "OnTradeWillBegin"
+        print response        
+
+    def OnGotContracts(self, response):
+        print "OnGotContracts"
         print response
         
-        nType = response.type
-        if nType == NOTIFICATION_TRADEWILLBEGIN:
-            print "OnTradeWillBegin"
-        elif nType == NOTIFICATION_GOTCONTRACTS:
-            print "OnGotContracts"
-            #
-            # save contract
-            #
-            req = BfGetContractReq(symbol="*",exchange="*")
-            resps = self.GwGetContract(req)
-            for resp in resps:
-                print resp
-                self.InsertContract(resp)
-        elif nType == NOTIFICATION_BEGINQUERYORDERS:
-            pass
-        elif nType == NOTIFICATION_BEGINQUERYPOSITION:
-            pass
-        elif nType == NOTIFICATION_ENDQUERYORDERS:
-            pass
-        elif nType == NOTIFICATION_ENDQUERYPOSITION:
-            pass
-        else:
-            print "invalid notification type"
+        #
+        # save contract
+        #
+        req = BfGetContractReq(symbol="*",exchange="*")
+        resps = self.GwGetContract(req)
+        for resp in resps:
+            print resp
+            self.InsertContract(resp)
             
     def OnPing(self, response):
         print "OnPing"
         print response
 
     def OnTick(self, response):
-        print "OnTick"
-        print response
+        #print "OnTick"
+        #print response
         
         #
         # save tick

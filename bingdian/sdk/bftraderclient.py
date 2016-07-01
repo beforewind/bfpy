@@ -1,5 +1,6 @@
 # coding=utf-8
-
+#creat by Hege
+#modified by bingdian: in "_tryconnect"  
 import time
 import random
 
@@ -36,6 +37,8 @@ class BfTraderClient(object):
         self.datafeed_channel = implementations.insecure_channel('localhost',50052)
         self.datafeed = beta_create_BfDatafeedService_stub(self.datafeed_channel)
         self._connectivity = interfaces.ChannelConnectivity.IDLE
+
+     
         
     def _update(self,connectivity):
         '''C:\projects\grpc\src\python\grpcio\tests\unit\beta\_connectivity_channel_test.py'''
@@ -54,35 +57,48 @@ class BfTraderClient(object):
     def OnStart(self):
         pass
         
-    def OnNotification(self, response):
-        pass        
+    def OnTradeWillBegin(self, response):
+        #pass 
+        print '==================Trade Will Begin==========\n'
+        print response
 
+    def OnGotContracts(self, response):
+        pass        
+            
     def OnPing(self, response):
         pass        
 
     def OnTick(self, response):
-        pass        
-        
+        pass 
+   
     def OnError(self, response):
-        pass        
+        print '==================Error==========\n',response.message.encode("GBK")
+        #pass        
             
     def OnLog(self, response):
-        pass        
+        print '==================Log==========\n',response.when,response.message.encode("GBK")
+        #pass        
     
     def OnTrade(self, response):
+        #print '===============on Trader===============\n'
+        #print response
         pass        
     
     def OnOrder(self, response):
-        pass        
-            
+    
+        #pass
+        print '==============on oder==============\n',response
+        print '**tradedVolume:',response.tradedVolume 
     def OnPosition(self, response):
-        pass        
+        #pass 
+        print response
 
     def OnAccount(self, response):
         pass        
         
     def OnStop(self):
-        pass        
+        print '===================on Stop==============='
+        #pass        
         
     #
     #  gateway api
@@ -91,8 +107,8 @@ class BfTraderClient(object):
         response = self.gateway.SendOrder(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
     
-    def CancleOrder(self,request):
-        response = self.gateway.CancleOrder(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
+    def CancelOrder(self,request): # 'Cancel' ,not  'Cancle' , Fixed
+        response = self.gateway.CancelOrder(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
     
     def QueryAccount(self):
@@ -111,10 +127,6 @@ class BfTraderClient(object):
         response = self.gateway.Ping(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
     
-    def QueryOrders(self):
-        response = self.gateway.QueryOrders(BfVoid(),timeout=_TIMEOUT_SECONDS,metadata=_MT)
-        return response
-
     #
     # datafeed api
     #
@@ -143,26 +155,10 @@ class BfTraderClient(object):
         response = self.datafeed.GetBar(request,timeout=5*_TIMEOUT_SECONDS,metadata=_MT)
         return response 
 
-    def DeleteContract(self,request):
-        response = self.datafeed.DeleteContract(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
-        return response 
-    
-    def DeleteTick(self,request):
-        response = self.datafeed.DeleteTick(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
-        return response
-    
-    def DeleteBar(self,request):
-        response = self.datafeed.DeleteBar(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
-        return response 
-    
     def DfPing(self,request):
         response = self.datafeed.Ping(request,timeout=_TIMEOUT_SECONDS,metadata=_MT)
         return response
- 
-    def CleanAll(self):
-        response = self.datafeed.Ping(BfVoid(),timeout=_TIMEOUT_SECONDS,metadata=_MT)
-        return response
-  
+    
 def _dispatchPush(client,resp):
     if resp.Is(_TICK_TYPE):
         resp_data = BfTickData()
@@ -199,7 +195,12 @@ def _dispatchPush(client,resp):
     elif resp.Is(_NOTIFICATION_TYPE):
         resp_data = BfNotificationData()
         resp.Unpack(resp_data)
-        client.OnNotification(resp_data)
+        if resp_data.type == NOTIFICATION_GOTCONTRACTS:
+            client.OnGotContracts(resp_data)
+        elif resp_data.type == NOTIFICATION_TRADEWILLBEGIN:
+            client.OnTradeWillBegin(resp_data)
+        else:
+            print "invliad notification type"
     else:
         print "invalid push type"        
     
@@ -216,6 +217,7 @@ def _disconnect(client):
     req = BfVoid()
     resp = client.gateway.DisconnectPush(req,timeout=_TIMEOUT_SECONDS,metadata=_MT)
     
+    
 def _tryconnect(client):
     '''subscribe dont tryconnect after server shutdown. so unsubscrible and subscrible again'''
     print "sleep 5s,try reconnect..."
@@ -226,6 +228,7 @@ def _tryconnect(client):
     time.sleep(_TIMEOUT_SECONDS)
     time.sleep(_TIMEOUT_SECONDS)
     time.sleep(_TIMEOUT_SECONDS)
+    client.reconnect=True #by dingdian
     
 def BfRun(client,clientId,tickHandler,tradeHandler,logHandler,symbol,exchange):
     print "start BfTraderClient"

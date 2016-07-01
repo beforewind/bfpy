@@ -3,33 +3,19 @@
 #################Readme#########################
 #1.请手工保证帐号上的钱够！
 #2.本策略还不支持多实例等复杂场景。
-#3.策略退出是会清除所有挂单。
+#3.策略退出时会清除所有挂单。
+
+
+
+import sys 
+sys.path.append("..") 
+from bftraderclient import BfTraderClient,BfRun
+from bfgateway_pb2 import *
+from bfdatafeed_pb2 import *
 
 from  datetime  import  *
 import time
 import random
-
-from bfgateway_pb2 import *
-from bfdatafeed_pb2 import *
-from google.protobuf.any_pb2 import *
-
-from grpc.beta import implementations
-from grpc.beta import interfaces
-
-_ONE_DAY_IN_SECONDS = 60 * 60 * 24
-_TIMEOUT_SECONDS = 1
-_CLIENT_ID = "dualcross"
-_MT = [("clientid",_CLIENT_ID)]
-
-_PING_TYPE = BfPingData().DESCRIPTOR
-_ACCOUNT_TYPE = BfAccountData().DESCRIPTOR
-_POSITION_TYPE = BfPositionData().DESCRIPTOR
-_TICK_TYPE = BfTickData().DESCRIPTOR
-_TRADE_TYPE = BfTradeData().DESCRIPTOR
-_ORDER_TYPE = BfOrderData().DESCRIPTOR
-_LOG_TYPE = BfLogData().DESCRIPTOR
-_ERROR_TYPE = BfErrorData().DESCRIPTOR
-_NOTIFICATION_TYPE = BfNotificationData().DESCRIPTOR
 
 # 默认空值
 EMPTY_STRING = ''
@@ -60,7 +46,7 @@ class BarData(object):
         self.openInterest = EMPTY_INT       # 持仓量
 
 
-class DualCross(object):
+class DualCross(BfTraderClient):
     # 策略参数
     TRADE_VOLUME = 1    # 每次交易的手数
     VOLUME_LIMIT = 5      # 多仓或空仓的最大手数
@@ -82,8 +68,6 @@ class DualCross(object):
     slowMa1 = EMPTY_FLOAT   # 上一根的慢均线
 
     # 关心的品种，持有仓位
-    symbol = "rb1610"
-    exchange = "SHFE"
     period = PERIOD_M01
     pos_long = 0    #多仓
     pos_short = 0   #空仓
@@ -91,37 +75,28 @@ class DualCross(object):
 
     def __init__(self):
         print "init dualcross"
-        self.gateway_channel = implementations.insecure_channel('localhost', 50051)
-        self.gateway = beta_create_BfGatewayService_stub(self.gateway_channel)
-        self.datafeed_channel = implementations.insecure_channel('localhost',50052)
-        self.datafeed = beta_create_BfDatafeedService_stub(self.datafeed_channel)
-        self.connectivity = interfaces.ChannelConnectivity.IDLE
+        BfTraderClient.__init__(self)
+        self.clientId = "Save 1min bar"
+        self.tickHandler = True
+        self.tradeHandler = False
+        self.logHandler = False
+        self.symbol = "rb1610"
+        self.exchange = "SHFE"
     
-    def update(self,connectivity):
-        '''C:\projects\grpc\src\python\grpcio\tests\unit\beta\_connectivity_channel_test.py'''
-        print connectivity
-        self.connectivity = connectivity
-        
-    def subscribe(self):
-        self.gateway_channel.subscribe(self.update,try_to_connect=True)
-    
-    def unsubscribe(self):
-        self.gateway_channel.unsubscribe(self.update)
-
-    def initPosition(self, position):
+    def _initPosition(self, position):
         if position.direction == DIRECTION_LONG:
             self.pos_long += position.position
         elif position.direction == DIRECTION_SHORT:
-            self.pos_short -= position.position
+            self.pos_short += position.position
     
-    def OnInit(self):
+    def OnStart(self):
         print "OnInit-->QueryPosition"
         # 获取当前仓位
-        #positions = self.gateway.QueryPosition(BfVoid(),_TIMEOUT_SECONDS,metadata=_MT)
+        #positions = self.QueryPosition(BfVoid())
         #for pos in positions:
         #    print pos
         #    if pos.symbol == self.symbol and pos.exchange == self.exchange:
-        #        initPosition(pos)
+        #        _initPosition(pos)
 
     def OnTick(self, tick):
         # 收到行情TICK推送
@@ -133,9 +108,9 @@ class DualCross(object):
             print "Init: load history Bar"
             now = datetime.now()
             req = BfGetBarReq(symbol=self.symbol,exchange=self.exchange,period=self.period,toDate=tick.actionDate,toTime=tick.tickTime,count=self.SLOW_K_NUM)
-            bars = self.datafeed.GetBar(req,timeout=_ONE_DAY_IN_SECONDS,metadata=_MT)
+            bars = self.GetBar(req)
             for bar in bars:
-                self.onBar(bar.closePrice)
+                self._onBar(bar.closePrice)
             
             self.barMinute = tickMinute
             return
@@ -145,10 +120,10 @@ class DualCross(object):
             print tick.tickTime + " got a new bar"
             # 因为只用到了bar.closePrice，所以不必再去datafeed取上一K线
             # TODO，如果需要去datafeed取，记得稍微延迟几个tick以防datafeed还没准备好。
-            self.onBar(tick.lastPrice)
+            self._onBar(tick.lastPrice)
             self.barMinute = tickMinute    
 
-    def onBar(self, closePrice):
+    def _onBar(self, closePrice):
         # 计算快慢均线
         if not self.fastMa0:        
             self.fastMa0 = closePrice
@@ -199,7 +174,7 @@ class DualCross(object):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("buy: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_LONG,offset=OFFSET_OPEN)
-        resp = self.gateway.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -207,7 +182,7 @@ class DualCross(object):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("sell: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_LONG,offset=OFFSET_CLOSE)
-        resp = self.gateway.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -215,7 +190,7 @@ class DualCross(object):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("short: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_SHORT,offset=OFFSET_OPEN)
-        resp = self.gateway.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
@@ -223,21 +198,19 @@ class DualCross(object):
         print time.strftime("%Y-%m-%d %H:%M:%S")
         print ("cover: price=%10.3f vol=%d" %(price, volume))
         req = BfSendOrderReq(symbol=self.symbol,exchange=self.exchange,price=price,volume=volume,priceType=PRICETYPE_LIMITPRICE,direction=DIRECTION_SHORT,offset=OFFSET_CLOSE)
-        resp = self.gateway.SendOrder(req,_TIMEOUT_SECONDS,metadata=_MT)
+        resp = self.SendOrder(req)
         self.pending_orders.append(resp.bfOrderId)
         print resp
 
     def OnTradeWillBegin(self, request):
         # 盘前启动策略，能收到这个消息，而且是第一个消息
         # TODO：这里是做初始化的一个时机
-        print "OnTradeWillBegin"
-        print request        
+        pass        
 
     def OnGotContracts(self, request):
         # 盘前启动策略，能收到这个消息，是第二个消息
         # TODO：这里是做初始化的一个时机
-        print "OnGotContracts"
-        print request
+        pass
             
     def OnPing(self, request,):
         pass
@@ -250,7 +223,7 @@ class DualCross(object):
         print "OnLog"
         print request
 
-    def updatePosition(self, direction, offset, volume):
+    def _updatePosition(self, direction, offset, volume):
         if (direction == DIRECTION_LONG and offset == OFFSET_OPEN):
             self.pos_long += volume
         elif (direction == DIRECTION_LONG and offset == OFFSET_CLOSE):
@@ -271,8 +244,15 @@ class DualCross(object):
             return;
         
         self.pending_orders.remove(request.bfOrderId)
-        updatePosition(pos)
+        _updatePosition(request.direction, request.offset, request.volume)
         
+    def OnStop(self):
+        # 退出前，把挂单都撤了
+        print "cancel all pending orders"
+        req = BfCancelOrderReq(symbol=client.symbol,exchange=client.exchange)
+        for id in self.pending_orders:
+            req.bfOrderId = id
+            self.CancleOrder(req)
     
     def OnOrder(self, request):
         # 挂单的中间状态，一般只需要在OnTrade里面处理。
@@ -287,103 +267,7 @@ class DualCross(object):
         print "OnAccount"
         print request
     
-def dispatchPush(client,resp):
-    if resp.Is(_TICK_TYPE):
-        resp_data = BfTickData()
-        resp.Unpack(resp_data)
-        client.OnTick(resp_data)
-    elif resp.Is(_PING_TYPE):
-        resp_data = BfPingData()
-        resp.Unpack(resp_data)
-        client.OnPing(resp_data)
-    elif resp.Is(_ACCOUNT_TYPE):
-        resp_data = BfAccountData()
-        resp.Unpack(resp_data)
-        client.OnAccount(resp_data)
-    elif resp.Is(_POSITION_TYPE):
-        resp_data = BfPositionData()
-        resp.Unpack(resp_data)
-        client.OnPosition(resp_data)
-    elif resp.Is(_TRADE_TYPE):
-        resp_data = BfTradeData()
-        resp.Unpack(resp_data)
-        client.OnTrade(resp_data)
-    elif resp.Is(_ORDER_TYPE):
-        resp_data = BfOrderData()
-        resp.Unpack(resp_data)
-        client.OnOrder(resp_data)
-    elif resp.Is(_LOG_TYPE):
-        resp_data = BfLogData()
-        resp.Unpack(resp_data)
-        client.OnLog(resp_data)
-    elif resp.Is(_ERROR_TYPE):
-        resp_data = BfErrorData()
-        resp.Unpack(resp_data)
-        client.OnError(resp_data)
-    elif resp.Is(_NOTIFICATION_TYPE):
-        resp_data = BfNotificationData()
-        resp.Unpack(resp_data)
-        if resp_data.type == NOTIFICATION_GOTCONTRACTS:
-            client.OnGotContracts(resp_data)
-        elif resp_data.type == NOTIFICATION_TRADEWILLBEGIN:
-            client.OnTradeWillBegin(resp_data)
-        else:
-            print "invliad notification type"
-    else:
-        print "invalid push type"        
-    
-def connect(client):
-    print "connect gateway"
-    req = BfConnectPushReq(clientId=_CLIENT_ID,tickHandler=True,tradeHandler=True,logHandler=True,symbol=client.symbol,exchange=client.exchange)
-    responses = client.gateway.ConnectPush(req,timeout=_ONE_DAY_IN_SECONDS)
-    for resp in responses:
-        dispatchPush(client,resp)            
-    print "connect quit"
-
-def onClose(client):
-    # 退出前，把挂单都撤了
-    print "cancel all pending orders"
-    req = BfCancelOrderReq(symbol=client.symbol,exchange=client.exchange)
-    for id in client.pending_orders:
-        req.bfOrderId = id
-        client.gateway.CancelOrder(req)
-
-def disconnect(client):
-    print "disconnect gateway"
-    onClose(client)
-    req = BfVoid()
-    resp = client.gateway.DisconnectPush(req,_TIMEOUT_SECONDS,metadata=_MT)
-    
-def tryconnect(client):
-    '''subscribe dont tryconnect after server shutdown. so unsubscrible and subscrible again'''
-    print "sleep 5s,try reconnect..."
-    time.sleep(_TIMEOUT_SECONDS)
-    client.unsubscribe()
-    time.sleep(_TIMEOUT_SECONDS)
-    client.subscribe()            
-    time.sleep(_TIMEOUT_SECONDS)
-    time.sleep(_TIMEOUT_SECONDS)
-    time.sleep(_TIMEOUT_SECONDS)
-    
-def run():
-    print "start dualcross"
-    client = DualCross()
-    client.subscribe()
-    client.OnInit()
-
-    try:
-        while True:
-            if client.connectivity == interfaces.ChannelConnectivity.READY:
-                connect(client)
-            tryconnect(client)
-    except KeyboardInterrupt:
-        print "ctrl+c"        
-    
-    if client.connectivity == interfaces.ChannelConnectivity.READY:
-        disconnect(client)
-    
-    print "stop dualcross"
-    client.unsubscribe()
-    
 if __name__ == '__main__':
-    run()
+    client = DualCross()
+    BfRun(client,clientId=client.clientId,tickHandler=client.tickHandler,tradeHandler=client.tradeHandler,logHandler=client.logHandler,symbol=client.symbol,exchange=client.exchange)
+    
